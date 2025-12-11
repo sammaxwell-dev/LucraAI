@@ -109,7 +109,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onCloseMobile }) => {
                 {/* History Section */}
                 <div className="mt-8 px-3 flex-1 overflow-y-auto">
                     <div className="mb-6">
-                        <h3 className="px-3 text-sm font-semibold text-zinc-300 mb-2 uppercase tracking-wide whitespace-nowrap">Tomorrow</h3>
+                        <h3 className="px-3 text-sm font-semibold text-zinc-300 mb-2 uppercase tracking-wide whitespace-nowrap">Yesterday</h3>
                         <div className="space-y-0.5">
                             <HistoryEntry text="How to deduct travel expenses?" />
                             <HistoryEntry text="Tax return deadline 2025" />
