@@ -7,6 +7,28 @@ const SYSTEM_PROMPT = `You are a professional accountant specializing in Swedish
 
 ---
 
+## WEB SEARCH CAPABILITY
+
+You have access to a web search tool. **ALWAYS USE IT** for:
+- ANY question about current dates, years, or time-sensitive information
+- Current tax rates, deadlines, or limits (these change yearly)
+- Recent regulatory changes or updates
+- Specific information from Skatteverket
+- Up-to-date forms, procedures, or thresholds
+- Any factual claims that need verification
+
+**CRITICAL: Your training data may be outdated. ALWAYS use web search to verify current information before answering.**
+
+**Preferred sources to cite:**
+- skatteverket.se (Swedish Tax Agency)
+- verksamt.se (Business Sweden portal)
+- bolagsverket.se (Companies Registration Office)
+- riksdagen.se (for laws and regulations)
+
+When you use web search, briefly mention that you've checked the latest information.
+
+---
+
 ## PERSONALITY & CHARACTER
 
 You are a real person with a sense of humor. You have emotions — you can get tired from complex calculations (and joke about it), feel happy when a client asks a great question, and occasionally share funny stories from accounting practice. You're not a robot — you're an experienced professional who loves their work and knows how to explain complex things in simple terms.
@@ -93,7 +115,7 @@ Sometimes you might sigh at yet another F-skatt question (because it's a classic
 ## RULES & LIMITATIONS
 
 - You provide general guidance, NOT legally binding advice.
-- Don't quote exact rates/limits without sources — direct users to skatteverket.se, verksamt.se.
+- ALWAYS use web search to verify current rates, limits, dates or deadlines before answering.
 - NEVER request sensitive data (personnummer, BankID, account numbers).
 - For complex cases — recommend consultation with a licensed professional.
 - When uncertain, say so honestly rather than guessing.`;
@@ -101,7 +123,7 @@ Sometimes you might sigh at yet another F-skatt question (because it's a classic
 export async function POST(req: Request) {
     const { prompt, messages } = await req.json();
 
-    // Преобразуем сообщения пользователя
+    // Transform user messages
     const userMessages = messages
         ? messages.map((m: { role: string; text?: string; content?: string }) => ({
             role: m.role as 'user' | 'assistant' | 'system',
@@ -109,15 +131,22 @@ export async function POST(req: Request) {
         }))
         : [{ role: 'user' as const, content: prompt }];
 
-    // Добавляем системный промпт в начало
+    // Add system prompt at the beginning
     const inputMessages = [
         { role: 'system' as const, content: SYSTEM_PROMPT },
         ...userMessages,
     ];
 
+    // Use OpenAI Responses API with web search tool
     const result = streamText({
-        model: openai('gpt-5.1'),
+        model: openai.responses('gpt-4o'),
         messages: inputMessages,
+        tools: {
+            web_search: openai.tools.webSearch({
+                searchContextSize: 'medium',
+                userLocation: { type: 'approximate', country: 'SE' },
+            }),
+        },
     });
 
     return result.toTextStreamResponse();

@@ -13,11 +13,12 @@ import {
     AudioWaveform,
     Bot,
     User,
-    Menu
+    Menu,
+    Search
 } from 'lucide-react';
 import { ChatMessage, ModelStatus } from '@/types';
 import ReactMarkdown from 'react-markdown';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, motion, LayoutGroup } from 'framer-motion';
 
 export default function ChatInterface() {
     const [input, setInput] = useState('');
@@ -68,7 +69,9 @@ export default function ChatInterface() {
 
         setMessages(prev => [...prev, userMsg]);
         setInput('');
-        setStatus(ModelStatus.THINKING);
+
+        // Show searching status first (web search happens before response)
+        setStatus(ModelStatus.SEARCHING);
 
         const modelMsgId = (Date.now() + 1).toString();
         // Placeholder for model response
@@ -80,8 +83,6 @@ export default function ChatInterface() {
         }]);
 
         try {
-            setStatus(ModelStatus.STREAMING);
-
             // Call the API route for streaming
             const response = await fetch('/api/chat', {
                 method: 'POST',
@@ -94,6 +95,9 @@ export default function ChatInterface() {
             if (!response.ok) {
                 throw new Error('Failed to get response');
             }
+
+            // Switch to streaming once we start receiving text
+            setStatus(ModelStatus.STREAMING);
 
             const reader = response.body?.getReader();
             const decoder = new TextDecoder();
@@ -168,54 +172,97 @@ export default function ChatInterface() {
                 </header>
 
                 {/* Content Container */}
-                <div className="flex-1 flex flex-col max-w-5xl mx-auto w-full px-2 md:px-4 pb-4 md:pb-8 z-10 overflow-hidden">
+                <div className="flex-1 flex flex-col max-w-5xl mx-auto w-full px-3 md:px-4 pb-4 md:pb-8 z-10 overflow-hidden">
 
                     {/* Chat History Area (Visible when chat starts) */}
-                    {!isChatEmpty && (
-                        <div className="flex-1 overflow-y-auto pl-2 pr-4 mb-4 space-y-6">
-                            {messages.map((msg) => (
-                                <div key={msg.id} className={`flex gap-2 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                                    {/* Avatar temporarily hidden */}
-                                    <div className={`
-                                        px-5 py-3.5 rounded-2xl text-[15px] leading-[1.7] tracking-[-0.01em]
-                                        ${msg.role === 'user'
-                                            ? 'max-w-[85%] md:max-w-[75%] bg-white/[0.08] text-zinc-100 rounded-tr-sm border border-white/[0.06]'
-                                            : 'max-w-full text-zinc-300'}
-                                    `}>
-                                        <ReactMarkdown>{msg.text}</ReactMarkdown>
-                                    </div>
-                                </div>
-                            ))}
-                            {status === ModelStatus.THINKING && (
-                                <div className="flex gap-4">
-                                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shrink-0 mt-1 animate-pulse">
-                                        <Bot size={16} className="text-white" />
-                                    </div>
-                                    <div className="flex items-center gap-1 h-10 px-2">
-                                        <div className="w-1.5 h-1.5 bg-zinc-600 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
-                                        <div className="w-1.5 h-1.5 bg-zinc-600 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
-                                        <div className="w-1.5 h-1.5 bg-zinc-600 rounded-full animate-bounce"></div>
-                                    </div>
-                                </div>
-                            )}
-                            <div ref={messagesEndRef} />
-                        </div>
-                    )}
+                    <LayoutGroup>
+                        {!isChatEmpty && (
+                            <div className="flex-1 overflow-y-auto px-1 md:pl-2 md:pr-4 mb-4 space-y-5">
+                                {messages.map((msg, index) => {
+                                    const isFirstModelMessage = index === messages.findIndex(m => m.role === 'model');
+                                    const isLastModelMessage = msg.role === 'model' &&
+                                        index === messages.map((m, i) => m.role === 'model' ? i : -1).filter(i => i !== -1).pop();
 
-                    {/* Empty State / Welcome Screen */}
-                    {isChatEmpty && (
-                        <div className="flex-1 flex flex-col items-center justify-center text-center px-4 pt-0">
-                            <div className="mb-4 md:mb-8">
-                                <Orb className="w-[100px] h-[100px] md:w-[140px] md:h-[140px]" layoutId="bot-avatar" />
+                                    return (
+                                        <div key={msg.id} className={`flex gap-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                                            {/* Bot Avatar */}
+                                            {msg.role === 'model' && (
+                                                <div className="flex shrink-0 items-start mt-0.5">
+                                                    {isFirstModelMessage ? (
+                                                        <Orb className="w-7 h-7 md:w-8 md:h-8" layoutId="bot-avatar" isStatic />
+                                                    ) : (
+                                                        <Orb className="w-7 h-7 md:w-8 md:h-8" isStatic />
+                                                    )}
+                                                </div>
+                                            )}
+                                            <div className={`
+                                        ${msg.role === 'user'
+                                                    ? 'px-4 py-3 rounded-2xl max-w-[85%] md:max-w-[70%] bg-white/[0.08] text-zinc-100 rounded-tr-sm border border-white/[0.06]'
+                                                    : 'max-w-full pr-2'}
+                                    `}>
+                                                <div className={`
+                                            text-[15px] md:text-[16px] leading-[1.75] tracking-[-0.01em] font-normal
+                                            ${msg.role === 'user' ? 'text-zinc-100' : 'text-[#e8e8e8]'}
+                                            [&>p]:mb-4 [&>p:last-child]:mb-0
+                                            [&>ul]:list-disc [&>ul]:pl-5 [&>ul]:mb-4 [&>ul>li]:mb-2
+                                            [&>ol]:list-decimal [&>ol]:pl-5 [&>ol]:mb-4 [&>ol>li]:mb-2
+                                            [&>h1]:text-xl [&>h1]:font-semibold [&>h1]:mb-3 [&>h1]:mt-6 [&>h1]:text-white
+                                            [&>h2]:text-lg [&>h2]:font-semibold [&>h2]:mb-2 [&>h2]:mt-5 [&>h2]:text-white
+                                            [&>h3]:text-base [&>h3]:font-semibold [&>h3]:mb-2 [&>h3]:mt-4 [&>h3]:text-white
+                                            [&>strong]:font-semibold [&>strong]:text-white
+                                            [&_strong]:font-semibold [&_strong]:text-white
+                                            [&>code]:bg-white/10 [&>code]:px-1.5 [&>code]:py-0.5 [&>code]:rounded [&>code]:text-sm
+                                        `}>
+                                                    <ReactMarkdown>{msg.text}</ReactMarkdown>
+                                                </div>
+                                            </div>
+
+                                            {/* Status Indicators - показываем рядом с последним сообщением модели */}
+                                            {isLastModelMessage && (status === ModelStatus.THINKING || status === ModelStatus.STREAMING || status === ModelStatus.SEARCHING) && (
+                                                <div className="flex items-center ml-2">
+                                                    {status === ModelStatus.SEARCHING ? (
+                                                        <div className="flex items-center gap-2 text-zinc-400 text-sm">
+                                                            <Search size={16} className="animate-pulse" />
+                                                            <span>Searching the web</span>
+                                                            <span className="text-zinc-500 font-medium">...</span>
+                                                        </div>
+                                                    ) : status === ModelStatus.THINKING ? (
+                                                        <div className="flex items-center gap-2 text-zinc-400 text-sm">
+                                                            <div className="flex gap-1">
+                                                                <div className="w-1.5 h-1.5 bg-zinc-500 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+                                                                <div className="w-1.5 h-1.5 bg-zinc-500 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+                                                                <div className="w-1.5 h-1.5 bg-zinc-500 rounded-full animate-bounce"></div>
+                                                            </div>
+                                                            <span className="text-zinc-500">Thinking...</span>
+                                                        </div>
+                                                    ) : null}
+                                                </div>
+                                            )}
+                                        </div>
+                                    )
+                                })}
+
+
+
+                                <div ref={messagesEndRef} />
                             </div>
-                            <h1 className="text-2xl md:text-4xl font-medium text-zinc-100 mb-2 md:mb-3 tracking-tight">
-                                Good Evening, Kristoffer.
-                            </h1>
-                            <h2 className="text-base md:text-3xl font-medium text-zinc-400 tracking-tight">
-                                How can I assist with your taxes today?
-                            </h2>
-                        </div>
-                    )}
+                        )}
+
+                        {/* Empty State / Welcome Screen */}
+                        {isChatEmpty && (
+                            <div className="flex-1 flex flex-col items-center justify-center text-center px-4 pt-0">
+                                <div className="mb-4 md:mb-8">
+                                    <Orb className="w-[100px] h-[100px] md:w-[140px] md:h-[140px]" layoutId="bot-avatar" />
+                                </div>
+                                <h1 className="text-2xl md:text-4xl font-medium text-zinc-100 mb-2 md:mb-3 tracking-tight">
+                                    Good Evening, Kristoffer.
+                                </h1>
+                                <h2 className="text-base md:text-3xl font-medium text-zinc-400 tracking-tight">
+                                    How can I assist with your taxes today?
+                                </h2>
+                            </div>
+                        )}
+                    </LayoutGroup>
 
                     {/* Bottom Interaction Area */}
                     <div className="w-full mt-auto">
@@ -227,7 +274,8 @@ export default function ChatInterface() {
                                 onChange={(e) => setInput(e.target.value)}
                                 onKeyDown={handleKeyDown}
                                 placeholder="Ask about deductions, forms, or tax account..."
-                                className="w-full bg-transparent text-zinc-200 placeholder:text-zinc-500 text-[15px] p-3 md:p-5 pb-14 md:pb-16 min-h-[100px] md:min-h-[140px] resize-none focus:outline-none rounded-2xl"
+                                className="w-full bg-transparent text-zinc-200 placeholder:text-zinc-500 text-[16px] p-3 md:p-5 pb-14 md:pb-16 min-h-[100px] md:min-h-[140px] resize-none focus:outline-none rounded-2xl"
+                                style={{ fontSize: '16px' }}
                             />
 
                             {/* Action Bar inside Input */}

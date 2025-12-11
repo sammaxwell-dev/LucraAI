@@ -15,6 +15,28 @@ body {
 
 html {
   color-scheme: dark;
+  /* Prevent iOS Safari from resizing viewport when keyboard opens */
+  height: 100%;
+  overflow: hidden;
+}
+
+/* Prevent viewport resize on iOS when focusing input */
+@supports (-webkit-touch-callout: none) {
+  body {
+    height: 100vh;
+    height: -webkit-fill-available;
+  }
+
+  html {
+    height: -webkit-fill-available;
+  }
+}
+
+/* Prevent zoom on input focus for iOS - input must have font-size >= 16px */
+input,
+textarea,
+select {
+  font-size: 16px !important;
 }
 
 /* Hide scrollbar for horizontal scroll containers */

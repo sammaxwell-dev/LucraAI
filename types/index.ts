@@ -19,6 +19,7 @@ export interface HistoryItem {
 export enum ModelStatus {
     IDLE = 'IDLE',
     THINKING = 'THINKING',
+    SEARCHING = 'SEARCHING',
     STREAMING = 'STREAMING',
     ERROR = 'ERROR'
 }
