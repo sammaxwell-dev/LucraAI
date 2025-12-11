@@ -204,14 +204,14 @@ export default function ChatInterface() {
 
                     {/* Empty State / Welcome Screen */}
                     {isChatEmpty && (
-                        <div className="flex-1 flex flex-col items-center justify-center text-center px-4 pt-4 md:pt-0">
-                            <div className="mb-8 scale-90 md:scale-110">
-                                <Orb className="w-[140px] h-[140px]" layoutId="bot-avatar" />
+                        <div className="flex-1 flex flex-col items-center justify-center text-center px-4 pt-0">
+                            <div className="mb-4 md:mb-8">
+                                <Orb className="w-[100px] h-[100px] md:w-[140px] md:h-[140px]" layoutId="bot-avatar" />
                             </div>
-                            <h1 className="text-3xl md:text-4xl font-medium text-zinc-100 mb-3 tracking-tight">
+                            <h1 className="text-2xl md:text-4xl font-medium text-zinc-100 mb-2 md:mb-3 tracking-tight">
                                 Good Evening, Kristoffer.
                             </h1>
-                            <h2 className="text-xl md:text-3xl font-medium text-zinc-400 tracking-tight">
+                            <h2 className="text-base md:text-3xl font-medium text-zinc-400 tracking-tight">
                                 How can I assist with your taxes today?
                             </h2>
                         </div>
@@ -227,11 +227,11 @@ export default function ChatInterface() {
                                 onChange={(e) => setInput(e.target.value)}
                                 onKeyDown={handleKeyDown}
                                 placeholder="Ask about deductions, forms, or tax account..."
-                                className="w-full bg-transparent text-zinc-200 placeholder:text-zinc-500 text-base md:text-[15px] p-4 md:p-5 pb-16 min-h-[140px] resize-none focus:outline-none rounded-2xl"
+                                className="w-full bg-transparent text-zinc-200 placeholder:text-zinc-500 text-[15px] p-3 md:p-5 pb-14 md:pb-16 min-h-[100px] md:min-h-[140px] resize-none focus:outline-none rounded-2xl"
                             />
 
                             {/* Action Bar inside Input */}
-                            <div className="absolute bottom-4 left-4 right-4 flex justify-between items-center">
+                            <div className="absolute bottom-3 md:bottom-4 left-3 md:left-4 right-3 md:right-4 flex justify-between items-center">
                                 <div className="flex items-center gap-2">
                                     <button className="p-2 text-zinc-500 hover:text-zinc-300 hover:bg-white/5 rounded-lg transition-colors" title="Attach Document">
                                         <Paperclip size={18} />
@@ -266,19 +266,21 @@ export default function ChatInterface() {
 
                         {/* Suggestion Cards (Only visible on empty state) */}
                         {isChatEmpty && (
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-                                <SuggestionCard
-                                    title="Travel Deductions"
-                                    description="Check if you are eligible for travel to work deductions (Reseavdrag)"
-                                />
-                                <SuggestionCard
-                                    title="Declare Income"
-                                    description="Assistance with submitting your annual income declaration"
-                                />
-                                <SuggestionCard
-                                    title="VAT & Employer"
-                                    description="Rules regarding VAT returns and employer contributions"
-                                />
+                            <div className="mt-4 md:mt-6 -mx-2 md:mx-0">
+                                <div className="flex md:grid md:grid-cols-3 gap-3 md:gap-4 overflow-x-auto px-2 md:px-0 pb-2 md:pb-0 snap-x snap-mandatory scrollbar-hide">
+                                    <SuggestionCard
+                                        title="Travel Deductions"
+                                        description="Check if you are eligible for travel to work deductions (Reseavdrag)"
+                                    />
+                                    <SuggestionCard
+                                        title="Declare Income"
+                                        description="Assistance with submitting your annual income declaration"
+                                    />
+                                    <SuggestionCard
+                                        title="VAT & Employer"
+                                        description="Rules regarding VAT returns and employer contributions"
+                                    />
+                                </div>
                             </div>
                         )}
                     </div>
