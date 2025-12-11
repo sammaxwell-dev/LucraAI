@@ -11,6 +11,7 @@ import {
     Calculator,
     FileText,
     AudioWaveform,
+    Send,
     Bot,
     User,
     Menu,
@@ -195,47 +196,46 @@ export default function ChatInterface() {
                                                     )}
                                                 </div>
                                             )}
-                                            <div className={`
-                                        ${msg.role === 'user'
-                                                    ? 'px-4 py-3 rounded-2xl max-w-[85%] md:max-w-[70%] bg-white/[0.08] text-zinc-100 rounded-tr-sm border border-white/[0.06]'
-                                                    : 'max-w-full pr-2'}
-                                    `}>
-                                                <div className={`
-                                            text-[15px] md:text-[16px] leading-[1.75] tracking-[-0.01em] font-normal
-                                            ${msg.role === 'user' ? 'text-zinc-100' : 'text-[#e8e8e8]'}
-                                            [&>p]:mb-4 [&>p:last-child]:mb-0
-                                            [&>ul]:list-disc [&>ul]:pl-5 [&>ul]:mb-4 [&>ul>li]:mb-2
-                                            [&>ol]:list-decimal [&>ol]:pl-5 [&>ol]:mb-4 [&>ol>li]:mb-2
-                                            [&>h1]:text-xl [&>h1]:font-semibold [&>h1]:mb-3 [&>h1]:mt-6 [&>h1]:text-white
-                                            [&>h2]:text-lg [&>h2]:font-semibold [&>h2]:mb-2 [&>h2]:mt-5 [&>h2]:text-white
-                                            [&>h3]:text-base [&>h3]:font-semibold [&>h3]:mb-2 [&>h3]:mt-4 [&>h3]:text-white
-                                            [&>strong]:font-semibold [&>strong]:text-white
-                                            [&_strong]:font-semibold [&_strong]:text-white
-                                            [&>code]:bg-white/10 [&>code]:px-1.5 [&>code]:py-0.5 [&>code]:rounded [&>code]:text-sm
-                                        `}>
-                                                    <ReactMarkdown>{msg.text}</ReactMarkdown>
-                                                </div>
-                                            </div>
 
-                                            {/* Status Indicators - показываем рядом с последним сообщением модели */}
-                                            {isLastModelMessage && (status === ModelStatus.THINKING || status === ModelStatus.STREAMING || status === ModelStatus.SEARCHING) && (
-                                                <div className="flex items-center ml-2">
-                                                    {status === ModelStatus.SEARCHING ? (
-                                                        <div className="flex items-center gap-2 text-zinc-400 text-sm">
-                                                            <Search size={16} className="animate-pulse" />
-                                                            <span>Searching the web</span>
-                                                            <span className="text-zinc-500 font-medium">...</span>
-                                                        </div>
-                                                    ) : status === ModelStatus.THINKING ? (
-                                                        <div className="flex items-center gap-2 text-zinc-400 text-sm">
-                                                            <div className="flex gap-1">
-                                                                <div className="w-1.5 h-1.5 bg-zinc-500 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
-                                                                <div className="w-1.5 h-1.5 bg-zinc-500 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
-                                                                <div className="w-1.5 h-1.5 bg-zinc-500 rounded-full animate-bounce"></div>
-                                                            </div>
-                                                            <span className="text-zinc-500">Thinking...</span>
-                                                        </div>
-                                                    ) : null}
+                                            {/* Message Content or Status Indicator */}
+                                            {msg.role === 'model' && !msg.text && status === ModelStatus.SEARCHING ? (
+                                                // Show searching indicator when waiting for response
+                                                <div className="flex items-center gap-2 text-zinc-400 text-sm py-2">
+                                                    <Search size={16} className="animate-pulse" />
+                                                    <span>Searching the web</span>
+                                                    <span className="text-zinc-500 font-medium">...</span>
+                                                </div>
+                                            ) : msg.role === 'model' && !msg.text && status === ModelStatus.STREAMING ? (
+                                                // Show typing indicator when streaming but no text yet
+                                                <div className="flex items-center gap-2 text-zinc-400 text-sm py-2">
+                                                    <div className="flex gap-1">
+                                                        <div className="w-1.5 h-1.5 bg-zinc-500 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+                                                        <div className="w-1.5 h-1.5 bg-zinc-500 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+                                                        <div className="w-1.5 h-1.5 bg-zinc-500 rounded-full animate-bounce"></div>
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                // Show actual message content
+                                                <div className={`
+                                                    ${msg.role === 'user'
+                                                        ? 'px-4 py-3 rounded-2xl max-w-[85%] md:max-w-[70%] bg-white/[0.08] text-zinc-100 rounded-tr-sm border border-white/[0.06]'
+                                                        : 'max-w-full pr-2'}
+                                                `}>
+                                                    <div className={`
+                                                        text-[15px] md:text-[16px] leading-[1.75] tracking-[-0.01em] font-normal
+                                                        ${msg.role === 'user' ? 'text-zinc-100' : 'text-[#e8e8e8]'}
+                                                        [&>p]:mb-4 [&>p:last-child]:mb-0
+                                                        [&>ul]:list-disc [&>ul]:pl-5 [&>ul]:mb-4 [&>ul>li]:mb-2
+                                                        [&>ol]:list-decimal [&>ol]:pl-5 [&>ol]:mb-4 [&>ol>li]:mb-2
+                                                        [&>h1]:text-xl [&>h1]:font-semibold [&>h1]:mb-3 [&>h1]:mt-6 [&>h1]:text-white
+                                                        [&>h2]:text-lg [&>h2]:font-semibold [&>h2]:mb-2 [&>h2]:mt-5 [&>h2]:text-white
+                                                        [&>h3]:text-base [&>h3]:font-semibold [&>h3]:mb-2 [&>h3]:mt-4 [&>h3]:text-white
+                                                        [&>strong]:font-semibold [&>strong]:text-white
+                                                        [&_strong]:font-semibold [&_strong]:text-white
+                                                        [&>code]:bg-white/10 [&>code]:px-1.5 [&>code]:py-0.5 [&>code]:rounded [&>code]:text-sm
+                                                    `}>
+                                                        <ReactMarkdown>{msg.text}</ReactMarkdown>
+                                                    </div>
                                                 </div>
                                             )}
                                         </div>
@@ -306,7 +306,13 @@ export default function ChatInterface() {
                                                 : 'bg-white/10 text-zinc-500 border border-white/5 cursor-not-allowed'}
                                         `}
                                     >
-                                        {status !== ModelStatus.IDLE ? <div className="w-4 h-4 border-2 border-zinc-500 border-t-transparent rounded-full animate-spin"></div> : <AudioWaveform size={20} />}
+                                        {status !== ModelStatus.IDLE ? (
+                                            <div className="w-4 h-4 border-2 border-zinc-500 border-t-transparent rounded-full animate-spin"></div>
+                                        ) : input.trim() ? (
+                                            <Send size={20} />
+                                        ) : (
+                                            <AudioWaveform size={20} />
+                                        )}
                                     </button>
                                 </div>
                             </div>
