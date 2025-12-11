@@ -175,28 +175,15 @@ export default function ChatInterface() {
                         <div className="flex-1 overflow-y-auto pl-2 pr-4 mb-4 space-y-6">
                             {messages.map((msg) => (
                                 <div key={msg.id} className={`flex gap-2 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                                    {msg.role === 'model' && (
-                                        <div className="flex shrink-0 items-start pl-2 pt-3">
-                                            {messages.filter(m => m.role === 'model')[0]?.id === msg.id ? (
-                                                <Orb className="w-8 h-8" layoutId="bot-avatar" isStatic />
-                                            ) : (
-                                                <Orb className="w-8 h-8" isStatic />
-                                            )}
-                                        </div>
-                                    )}
+                                    {/* Avatar temporarily hidden */}
                                     <div className={`
-                                        max-w-[85%] md:max-w-[75%] px-5 py-3.5 rounded-2xl text-[15px] leading-relaxed
+                                        px-5 py-3.5 rounded-2xl text-[15px] leading-[1.7] tracking-[-0.01em]
                                         ${msg.role === 'user'
-                                            ? 'bg-white/10 text-white rounded-tr-sm border border-white/5'
-                                            : 'bg-transparent text-zinc-200'}
+                                            ? 'max-w-[85%] md:max-w-[75%] bg-white/[0.08] text-zinc-100 rounded-tr-sm border border-white/[0.06]'
+                                            : 'max-w-full text-zinc-300'}
                                     `}>
                                         <ReactMarkdown>{msg.text}</ReactMarkdown>
                                     </div>
-                                    {msg.role === 'user' && (
-                                        <div className="flex w-8 h-8 rounded-full bg-zinc-800 items-center justify-center shrink-0 mt-3 border border-white/5">
-                                            <User size={16} className="text-zinc-400" />
-                                        </div>
-                                    )}
                                 </div>
                             ))}
                             {status === ModelStatus.THINKING && (
@@ -217,14 +204,14 @@ export default function ChatInterface() {
 
                     {/* Empty State / Welcome Screen */}
                     {isChatEmpty && (
-                        <div className="flex-1 flex flex-col items-center justify-center text-center -mt-20 px-4">
+                        <div className="flex-1 flex flex-col items-center justify-center text-center px-4 pt-4 md:pt-0">
                             <div className="mb-8 scale-90 md:scale-110">
                                 <Orb className="w-[140px] h-[140px]" layoutId="bot-avatar" />
                             </div>
-                            <h1 className="text-3xl md:text-4xl font-medium text-white mb-3 tracking-tight">
-                                Good Evening, Shamil.
+                            <h1 className="text-3xl md:text-4xl font-medium text-zinc-100 mb-3 tracking-tight">
+                                Good Evening, Kristoffer.
                             </h1>
-                            <h2 className="text-xl md:text-3xl font-medium text-zinc-200 tracking-tight">
+                            <h2 className="text-xl md:text-3xl font-medium text-zinc-400 tracking-tight">
                                 How can I assist with your taxes today?
                             </h2>
                         </div>

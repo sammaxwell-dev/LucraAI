@@ -16,7 +16,7 @@ const config: Config = {
                 border: '#27272a',
             },
             fontFamily: {
-                sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif'],
+                sans: ['var(--font-geist)', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif'],
             },
             boxShadow: {
                 'glow': '0 0 40px -10px rgba(255, 255, 255, 0.1)',
