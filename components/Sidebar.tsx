@@ -13,14 +13,17 @@ import {
     Triangle,
     X
 } from 'lucide-react';
+import { ComingSoonModal } from './ComingSoonModal';
 
 interface SidebarProps {
     isOpen: boolean;
     onCloseMobile?: () => void;
 }
 
-const NavItem = ({ icon: Icon, label, active = false }: { icon: React.ElementType, label: string, active?: boolean }) => (
-    <div className={`
+const NavItem = ({ icon: Icon, label, active = false, onClick }: { icon: React.ElementType, label: string, active?: boolean, onClick?: () => void }) => (
+    <div
+        onClick={onClick}
+        className={`
         flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition-all duration-200 group
         ${active ? 'bg-surfaceHighlight text-white' : 'text-zinc-400 hover:text-white hover:bg-white/5'}
     `}>
@@ -37,6 +40,8 @@ const HistoryEntry = ({ text }: { text: string }) => (
 
 export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onCloseMobile }) => {
     const [isMobile, setIsMobile] = useState(false);
+    const [isComingSoonOpen, setIsComingSoonOpen] = useState(false);
+    const [comingSoonFeature, setComingSoonFeature] = useState("");
 
     useEffect(() => {
         const checkMobile = () => {
@@ -48,13 +53,27 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onCloseMobile }) => {
         return () => window.removeEventListener('resize', checkMobile);
     }, []);
 
+    const openComingSoon = (feature: string) => {
+        setComingSoonFeature(feature);
+        setIsComingSoonOpen(true);
+        if (isMobile && onCloseMobile) {
+            onCloseMobile();
+        }
+    };
+
     // Desktop: collapse width to 0. Mobile: translate off-screen
     const sidebarClasses = isMobile
-        ? `fixed inset-y-0 left-0 z-50 w-[280px] transform transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full'}`
+        ? `fixed inset-y-0 left-0 z-50 w-[280px] max-w-[85vw] transform transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full'}`
         : `relative h-full transition-[width,opacity] duration-300 ease-in-out border-r border-white/5 flex flex-col shrink-0 overflow-hidden ${isOpen ? 'w-[280px] opacity-100' : 'w-0 opacity-0 border-r-0'}`;
 
     return (
         <>
+            <ComingSoonModal
+                isOpen={isComingSoonOpen}
+                onClose={() => setIsComingSoonOpen(false)}
+                featureName={comingSoonFeature}
+            />
+
             {/* Mobile Overlay */}
             {isMobile && isOpen && (
                 <div
@@ -99,11 +118,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onCloseMobile }) => {
 
                 {/* Main Navigation - Skatteverket Adapted */}
                 <div className="px-3 space-y-1">
-                    <NavItem icon={Home} label="Home" active />
-                    <NavItem icon={FileText} label="Income Tax" />
-                    <NavItem icon={Landmark} label="Tax Account" />
-                    <NavItem icon={Users} label="Population Reg" />
-                    <NavItem icon={History} label="History" />
+                    <NavItem icon={Home} label="Home" active onClick={() => { }} />
+                    <NavItem icon={FileText} label="Income Tax" onClick={() => openComingSoon("Income Tax")} />
+                    <NavItem icon={Landmark} label="Tax Account" onClick={() => openComingSoon("Tax Account")} />
+                    <NavItem icon={Users} label="Population Reg" onClick={() => openComingSoon("Population Registry")} />
+                    <NavItem icon={History} label="History" onClick={() => { }} />
                 </div>
 
                 {/* History Section */}

@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { ChatMessage, ModelStatus } from '@/types';
 import ReactMarkdown from 'react-markdown';
+import { AnimatePresence, motion } from 'framer-motion';
 
 export default function ChatInterface() {
     const [input, setInput] = useState('');
@@ -26,7 +27,13 @@ export default function ChatInterface() {
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     const scrollToBottom = () => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+        if (messagesEndRef.current?.parentElement) {
+            const parent = messagesEndRef.current.parentElement;
+            parent.scrollTo({
+                top: parent.scrollHeight,
+                behavior: "smooth"
+            });
+        }
     };
 
     useEffect(() => {
@@ -130,7 +137,7 @@ export default function ChatInterface() {
     const isChatEmpty = messages.length === 0;
 
     return (
-        <div className="flex h-screen w-full bg-[#050505] overflow-hidden font-sans selection:bg-white/20">
+        <div className="flex h-[100dvh] w-full bg-[#050505] overflow-hidden font-sans selection:bg-white/20">
             <Sidebar
                 isOpen={isSidebarOpen}
                 onCloseMobile={() => setIsSidebarOpen(false)}
@@ -161,16 +168,20 @@ export default function ChatInterface() {
                 </header>
 
                 {/* Content Container */}
-                <div className="flex-1 flex flex-col max-w-5xl mx-auto w-full px-4 md:px-8 pb-4 md:pb-8 z-10 overflow-hidden">
+                <div className="flex-1 flex flex-col max-w-5xl mx-auto w-full px-2 md:px-4 pb-4 md:pb-8 z-10 overflow-hidden">
 
                     {/* Chat History Area (Visible when chat starts) */}
                     {!isChatEmpty && (
-                        <div className="flex-1 overflow-y-auto pr-4 mb-4 space-y-6">
+                        <div className="flex-1 overflow-y-auto pl-2 pr-4 mb-4 space-y-6">
                             {messages.map((msg) => (
-                                <div key={msg.id} className={`flex gap-4 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                                <div key={msg.id} className={`flex gap-2 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                                     {msg.role === 'model' && (
-                                        <div className="hidden md:flex w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 items-center justify-center shrink-0 mt-1 shadow-lg shadow-purple-900/20">
-                                            <Bot size={16} className="text-white" />
+                                        <div className="flex shrink-0 items-start pl-2 pt-3">
+                                            {messages.filter(m => m.role === 'model')[0]?.id === msg.id ? (
+                                                <Orb className="w-8 h-8" layoutId="bot-avatar" isStatic />
+                                            ) : (
+                                                <Orb className="w-8 h-8" isStatic />
+                                            )}
                                         </div>
                                     )}
                                     <div className={`
@@ -182,7 +193,7 @@ export default function ChatInterface() {
                                         <ReactMarkdown>{msg.text}</ReactMarkdown>
                                     </div>
                                     {msg.role === 'user' && (
-                                        <div className="hidden md:flex w-8 h-8 rounded-full bg-zinc-800 items-center justify-center shrink-0 mt-1 border border-white/5">
+                                        <div className="flex w-8 h-8 rounded-full bg-zinc-800 items-center justify-center shrink-0 mt-3 border border-white/5">
                                             <User size={16} className="text-zinc-400" />
                                         </div>
                                     )}
@@ -208,7 +219,7 @@ export default function ChatInterface() {
                     {isChatEmpty && (
                         <div className="flex-1 flex flex-col items-center justify-center text-center -mt-20 px-4">
                             <div className="mb-8 scale-90 md:scale-110">
-                                <Orb />
+                                <Orb className="w-[140px] h-[140px]" layoutId="bot-avatar" />
                             </div>
                             <h1 className="text-3xl md:text-4xl font-medium text-white mb-3 tracking-tight">
                                 Good Evening, Shamil.
@@ -229,7 +240,7 @@ export default function ChatInterface() {
                                 onChange={(e) => setInput(e.target.value)}
                                 onKeyDown={handleKeyDown}
                                 placeholder="Ask about deductions, forms, or tax account..."
-                                className="w-full bg-transparent text-zinc-200 placeholder:text-zinc-500 text-[15px] p-4 md:p-5 pb-16 min-h-[140px] resize-none focus:outline-none rounded-2xl"
+                                className="w-full bg-transparent text-zinc-200 placeholder:text-zinc-500 text-base md:text-[15px] p-4 md:p-5 pb-16 min-h-[140px] resize-none focus:outline-none rounded-2xl"
                             />
 
                             {/* Action Bar inside Input */}
