@@ -1,4 +1,6 @@
-import React, { useEffect, useState } from 'react';
+'use client';
+
+import { useEffect, useState } from 'react';
 import {
     Home,
     FileText,
@@ -17,7 +19,7 @@ interface SidebarProps {
     onCloseMobile?: () => void;
 }
 
-const NavItem = ({ icon: Icon, label, active = false }: { icon: any, label: string, active?: boolean }) => (
+const NavItem = ({ icon: Icon, label, active = false }: { icon: React.ElementType, label: string, active?: boolean }) => (
     <div className={`
         flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition-all duration-200 group
         ${active ? 'bg-surfaceHighlight text-white' : 'text-zinc-400 hover:text-white hover:bg-white/5'}

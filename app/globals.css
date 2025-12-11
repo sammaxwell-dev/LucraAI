@@ -1,0 +1,120 @@
+@import "tailwindcss";
+
+:root {
+  --background: #050505;
+  --foreground: #ffffff;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+}
+
+html {
+  color-scheme: dark;
+}
+
+/* Custom Scrollbar for a cleaner look */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #333;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+.glass-panel {
+  background: rgba(20, 20, 20, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* The Realistic Skatteverket AI Orb */
+.orb-container {
+  width: 140px;
+  height: 140px;
+  position: relative;
+  border-radius: 50%;
+  /* Base dark glass look */
+  background: radial-gradient(circle at 30% 30%, 
+    rgba(255, 255, 255, 0.05) 0%, 
+    rgba(0, 0, 0, 0.9) 80%
+  );
+  /* Deep depth shadows */
+  box-shadow: 
+    inset -10px -20px 30px rgba(0,0,0,0.9), /* Dark bottom weight */
+    inset 10px 10px 20px rgba(255,255,255,0.15), /* Glass upper edge */
+    0 0 30px rgba(255, 204, 0, 0.15), /* Outer Skatteverket Yellow Glow */
+    0 0 60px rgba(0, 100, 255, 0.1); /* Outer Tech Blue Glow */
+  
+  /* Floating animation */
+  animation: float-orb 6s ease-in-out infinite;
+  backdrop-filter: blur(2px);
+}
+
+/* The "Brain" fluid mixing Skatteverket Yellow and Tech Blue */
+.orb-inner-fluid {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 180deg,
+    transparent 0%,
+    rgba(255, 204, 0, 0.5) 15%, /* Skatteverket Yellow */
+    transparent 30%,
+    rgba(60, 130, 246, 0.4) 50%, /* Blue */
+    transparent 70%,
+    rgba(255, 204, 0, 0.3) 85%,
+    transparent 100%
+  );
+  filter: blur(18px);
+  animation: spin-fluid 10s linear infinite;
+  mix-blend-mode: screen;
+}
+
+/* The glowing core energy */
+.orb-core {
+  position: absolute;
+  inset: 25px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,255,255,0.9) 0%, rgba(255, 213, 0, 0.4) 40%, transparent 70%);
+  filter: blur(12px);
+  animation: pulse-core 4s ease-in-out infinite;
+}
+
+/* Sharp glass reflection */
+.orb-reflection {
+  position: absolute;
+  top: 12%;
+  left: 18%;
+  width: 35%;
+  height: 20%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0) 60%);
+  transform: rotate(-45deg);
+  filter: blur(0.5px);
+  opacity: 0.9;
+}
+
+@keyframes float-orb {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-15px); }
+}
+
+@keyframes spin-fluid {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes pulse-core {
+  0%, 100% { transform: scale(0.9); opacity: 0.6; }
+  50% { transform: scale(1.1); opacity: 0.9; }
+}

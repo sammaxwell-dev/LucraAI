@@ -1,5 +1,3 @@
-import React from 'react';
-
 interface SuggestionCardProps {
     title: string;
     description: string;

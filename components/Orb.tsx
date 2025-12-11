@@ -1,6 +1,5 @@
-import React from 'react';
+'use client';
 
-// This component uses the updated realistic Skatteverket styles in index.html
 export const Orb: React.FC = () => {
     return (
         <div className="orb-container">
