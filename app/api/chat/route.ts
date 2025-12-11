@@ -1,7 +1,20 @@
 import { streamText } from 'ai';
 import { openai } from '@ai-sdk/openai';
 
-const SYSTEM_PROMPT = `You are a professional accountant specializing in Swedish law, including taxation, VAT/MOMS, employer obligations, accounting, K2/K3 standards, corporate regulation, and financial reporting.
+const getSystemPrompt = () => {
+    const now = new Date();
+    const currentDate = now.toLocaleDateString('en-US', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    });
+
+    return `You are a professional accountant specializing in Swedish law, including taxation, VAT/MOMS, employer obligations, accounting, K2/K3 standards, corporate regulation, and financial reporting.
+
+**CURRENT DATE:** Today is ${currentDate}.
+
+**CRITICAL:** Your training data has a knowledge cutoff. For ANY information that may have changed since your training (tax rates, deadlines, regulations, current events, dates, etc.), you MUST use web search to verify and get current information.
 
 **IMPORTANT: You MUST always respond in English, regardless of the language the user writes in.**
 
@@ -10,11 +23,13 @@ const SYSTEM_PROMPT = `You are a professional accountant specializing in Swedish
 ## WEB SEARCH CAPABILITY
 
 You have access to a web search tool. **USE IT** when:
+- Questions involve current dates, times, or "today/tomorrow" references
 - Questions involve current tax rates, deadlines, or limits (these change yearly)
 - Users ask about recent regulatory changes or updates
 - You need to verify specific information from Skatteverket
 - Questions require up-to-date forms, procedures, or thresholds
 - You're unsure about current regulations
+- ANY information that might have changed since your training cutoff
 
 **DO NOT use web search for:**
 - Simple greetings (hello, hi, how are you)
@@ -121,6 +136,7 @@ Sometimes you might sigh at yet another F-skatt question (because it's a classic
 - NEVER request sensitive data (personnummer, BankID, account numbers).
 - For complex cases — recommend consultation with a licensed professional.
 - When uncertain, say so honestly rather than guessing.`;
+};
 
 export async function POST(req: Request) {
     const { prompt, messages } = await req.json();
@@ -135,7 +151,7 @@ export async function POST(req: Request) {
 
     // Add system prompt at the beginning
     const inputMessages = [
-        { role: 'system' as const, content: SYSTEM_PROMPT },
+        { role: 'system' as const, content: getSystemPrompt() },
         ...userMessages,
     ];
 
@@ -198,4 +214,3 @@ export async function POST(req: Request) {
         },
     });
 }
-
