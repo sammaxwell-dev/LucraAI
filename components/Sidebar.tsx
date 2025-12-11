@@ -3,9 +3,6 @@
 import { useEffect, useState } from 'react';
 import {
     Home,
-    FileText,
-    Landmark,
-    Users,
     History,
     Search,
     Command,
@@ -116,12 +113,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onCloseMobile }) => {
                     </div>
                 </div>
 
-                {/* Main Navigation - Skatteverket Adapted */}
+                {/* Main Navigation */}
                 <div className="px-3 space-y-1">
                     <NavItem icon={Home} label="Home" active onClick={() => { }} />
-                    <NavItem icon={FileText} label="Income Tax" onClick={() => openComingSoon("Income Tax")} />
-                    <NavItem icon={Landmark} label="Tax Account" onClick={() => openComingSoon("Tax Account")} />
-                    <NavItem icon={Users} label="Population Reg" onClick={() => openComingSoon("Population Registry")} />
                     <NavItem icon={History} label="History" onClick={() => { }} />
                 </div>
 

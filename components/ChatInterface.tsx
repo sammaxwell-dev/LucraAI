@@ -71,8 +71,8 @@ export default function ChatInterface() {
         setMessages(prev => [...prev, userMsg]);
         setInput('');
 
-        // Show searching status first (web search happens before response)
-        setStatus(ModelStatus.SEARCHING);
+        // Show thinking status while waiting for response
+        setStatus(ModelStatus.THINKING);
 
         const modelMsgId = (Date.now() + 1).toString();
         // Placeholder for model response
@@ -84,21 +84,24 @@ export default function ChatInterface() {
         }]);
 
         try {
+            // Prepare messages history for API (include all previous messages + new user message)
+            const allMessages = [...messages, userMsg].map(m => ({
+                role: m.role === 'model' ? 'assistant' : m.role,
+                content: m.text,
+            }));
+
             // Call the API route for streaming
             const response = await fetch('/api/chat', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ prompt: userMsg.text }),
+                body: JSON.stringify({ messages: allMessages }),
             });
 
             if (!response.ok) {
                 throw new Error('Failed to get response');
             }
-
-            // Switch to streaming once we start receiving text
-            setStatus(ModelStatus.STREAMING);
 
             const reader = response.body?.getReader();
             const decoder = new TextDecoder();
@@ -110,7 +113,27 @@ export default function ChatInterface() {
                     if (done) break;
 
                     const chunk = decoder.decode(value, { stream: true });
-                    accumulatedText += chunk;
+
+                    // Check for status markers
+                    if (chunk.includes('[STATUS:SEARCHING]')) {
+                        setStatus(ModelStatus.SEARCHING);
+                        // Remove marker from text
+                        const cleanChunk = chunk.replace('[STATUS:SEARCHING]\n', '').replace('[STATUS:SEARCHING]', '');
+                        if (cleanChunk) {
+                            accumulatedText += cleanChunk;
+                        }
+                    } else if (chunk.includes('[STATUS:STREAMING]')) {
+                        setStatus(ModelStatus.STREAMING);
+                        // Remove marker from text
+                        const cleanChunk = chunk.replace('[STATUS:STREAMING]\n', '').replace('[STATUS:STREAMING]', '');
+                        if (cleanChunk) {
+                            accumulatedText += cleanChunk;
+                        }
+                    } else {
+                        accumulatedText += chunk;
+                    }
+
+                    // Update message with accumulated text (without markers)
                     setMessages(prev => prev.map(msg =>
                         msg.id === modelMsgId
                             ? { ...msg, text: accumulatedText }
@@ -163,11 +186,7 @@ export default function ChatInterface() {
                         <Menu size={20} />
                     </button>
 
-                    <button className="flex items-center gap-2 px-4 py-2 bg-[#121212] border border-white/10 rounded-lg text-sm font-medium text-zinc-300 hover:bg-[#1a1a1a] transition-colors ml-auto">
-                        Skatteverket
-                        <ChevronDown size={14} className="text-zinc-500" />
-                    </button>
-                    <button className="w-10 h-10 flex items-center justify-center rounded-full border border-white/10 bg-[#121212] text-zinc-400 hover:text-white hover:bg-[#1a1a1a] transition-colors">
+                    <button className="w-10 h-10 flex items-center justify-center rounded-full border border-white/10 bg-[#121212] text-zinc-400 hover:text-white hover:bg-[#1a1a1a] transition-colors ml-auto">
                         <MoreHorizontal size={18} />
                     </button>
                 </header>
@@ -340,6 +359,6 @@ export default function ChatInterface() {
                     </div>
                 </div>
             </main>
-        </div>
+        </div >
     );
 }

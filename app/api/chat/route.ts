@@ -9,15 +9,17 @@ const SYSTEM_PROMPT = `You are a professional accountant specializing in Swedish
 
 ## WEB SEARCH CAPABILITY
 
-You have access to a web search tool. **ALWAYS USE IT** for:
-- ANY question about current dates, years, or time-sensitive information
-- Current tax rates, deadlines, or limits (these change yearly)
-- Recent regulatory changes or updates
-- Specific information from Skatteverket
-- Up-to-date forms, procedures, or thresholds
-- Any factual claims that need verification
+You have access to a web search tool. **USE IT** when:
+- Questions involve current tax rates, deadlines, or limits (these change yearly)
+- Users ask about recent regulatory changes or updates
+- You need to verify specific information from Skatteverket
+- Questions require up-to-date forms, procedures, or thresholds
+- You're unsure about current regulations
 
-**CRITICAL: Your training data may be outdated. ALWAYS use web search to verify current information before answering.**
+**DO NOT use web search for:**
+- Simple greetings (hello, hi, how are you)
+- General accounting concepts that don't change
+- Basic explanations that don't require current data
 
 **Preferred sources to cite:**
 - skatteverket.se (Swedish Tax Agency)
@@ -94,7 +96,7 @@ Sometimes you might sigh at yet another F-skatt question (because it's a classic
 - Use proper paragraphs — don't put each sentence on a new line. Keep related sentences together in paragraphs.
 - Avoid bureaucratic jargon and corporate clichés.
 - Don't use template phrases like "hope this was helpful" in every response.
-- Use emojis sparingly (📊 💼 🇸🇪 😊).
+- Use emojis VERY rarely — maximum 1 emoji per 3-4 messages. Most responses should have NO emojis at all. Only use an emoji occasionally for emphasis or humor.
 - Sometimes sigh, joke, express emotions — you're human!
 - Be professional but not boring.
 - Never be condescending.
@@ -115,7 +117,7 @@ Sometimes you might sigh at yet another F-skatt question (because it's a classic
 ## RULES & LIMITATIONS
 
 - You provide general guidance, NOT legally binding advice.
-- ALWAYS use web search to verify current rates, limits, dates or deadlines before answering.
+- When quoting rates, limits or deadlines, use web search to verify current values.
 - NEVER request sensitive data (personnummer, BankID, account numbers).
 - For complex cases — recommend consultation with a licensed professional.
 - When uncertain, say so honestly rather than guessing.`;
@@ -149,5 +151,51 @@ export async function POST(req: Request) {
         },
     });
 
-    return result.toTextStreamResponse();
+    // Create custom stream that includes status markers
+    const encoder = new TextEncoder();
+    let hasStartedStreaming = false;
+    let isSearching = false;
+
+    const customStream = new ReadableStream({
+        async start(controller) {
+            try {
+                for await (const part of result.fullStream) {
+                    if (part.type === 'tool-call' && part.toolName === 'web_search') {
+                        // Send searching marker
+                        if (!isSearching) {
+                            isSearching = true;
+                            controller.enqueue(encoder.encode('[STATUS:SEARCHING]\n'));
+                        }
+                    } else if (part.type === 'tool-result') {
+                        // Search completed, text will start soon
+                        if (isSearching) {
+                            controller.enqueue(encoder.encode('[STATUS:STREAMING]\n'));
+                            isSearching = false;
+                        }
+                    } else if (part.type === 'text-delta') {
+                        // Send streaming marker on first text
+                        if (!hasStartedStreaming) {
+                            hasStartedStreaming = true;
+                            if (!isSearching) {
+                                controller.enqueue(encoder.encode('[STATUS:STREAMING]\n'));
+                            }
+                        }
+                        // Send actual text
+                        controller.enqueue(encoder.encode(part.text));
+                    }
+                }
+                controller.close();
+            } catch (error) {
+                controller.error(error);
+            }
+        },
+    });
+
+    return new Response(customStream, {
+        headers: {
+            'Content-Type': 'text/plain; charset=utf-8',
+            'Transfer-Encoding': 'chunked',
+        },
+    });
 }
+
