@@ -31,11 +31,20 @@ export interface User {
     createdAt: number;
 }
 
+// Быстрое сообщение (подсказка)
+export interface QuickMessage {
+    title: string;
+    description: string;
+    fullMessage: string;
+}
+
 // Сессия чата
 export interface ChatSession {
     id: string;
-    title: string;           // Автоматически из первого сообщения
+    title: string;
     messages: ChatMessage[];
     createdAt: number;
     updatedAt: number;
+    isGeneratingTitle?: boolean;  // Идет ли генерация названия
+    titleGenerated?: boolean;      // Было ли сгенерировано AI название
 }

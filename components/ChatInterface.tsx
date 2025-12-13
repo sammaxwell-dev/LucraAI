@@ -18,11 +18,12 @@ import {
     Menu,
     Search
 } from 'lucide-react';
-import { ChatMessage, ModelStatus } from '@/types';
+import { ChatMessage, ModelStatus, QuickMessage } from '@/types';
 import ReactMarkdown from 'react-markdown';
 import { AnimatePresence, motion, LayoutGroup } from 'framer-motion';
 import { useUser } from '@/hooks/useUser';
 import { useChatSessions } from '@/hooks/useChatSessions';
+import { getRandomQuickMessages } from '@/lib/quickMessages';
 
 export default function ChatInterface() {
     const [input, setInput] = useState('');
@@ -30,6 +31,7 @@ export default function ChatInterface() {
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const isUpdatingFromLocalRef = useRef(false); // Флаг для предотвращения sync-циклов
+    const [quickMessages, setQuickMessages] = useState<QuickMessage[]>([]);
 
     // Хуки для пользователя и сессий
     const { user, isLoading: isUserLoading, setUser } = useUser();
@@ -75,6 +77,13 @@ export default function ChatInterface() {
     useEffect(() => {
         scrollToBottom();
     }, [messages, status]);
+
+    // Генерация случайных быстрых сообщений при создании нового чата
+    useEffect(() => {
+        if (messages.length === 0) {
+            setQuickMessages(getRandomQuickMessages());
+        }
+    }, [messages.length]);
 
     useEffect(() => {
         const handleResize = () => {
@@ -241,6 +250,15 @@ export default function ChatInterface() {
             e.preventDefault();
             handleSendMessage();
         }
+    };
+
+    // Обработчик клика на карточку подсказки
+    const handleSuggestionClick = (message: string) => {
+        setInput(message);
+        // Небольшая задержка для визуализации
+        setTimeout(() => {
+            handleSendMessage();
+        }, 100);
     };
 
     // Welcome screen handler
@@ -459,21 +477,17 @@ export default function ChatInterface() {
                         </div>
 
                         {/* Suggestion Cards (Only visible on empty state) */}
-                        {isChatEmpty && (
+                        {isChatEmpty && quickMessages.length > 0 && (
                             <div className="mt-4 md:mt-6 -mx-2 md:mx-0">
                                 <div className="flex md:grid md:grid-cols-3 gap-3 md:gap-4 overflow-x-auto px-2 md:px-0 pb-2 md:pb-0 snap-x snap-mandatory scrollbar-hide">
-                                    <SuggestionCard
-                                        title="Travel Deductions"
-                                        description="Check if you are eligible for travel to work deductions (Reseavdrag)"
-                                    />
-                                    <SuggestionCard
-                                        title="Declare Income"
-                                        description="Assistance with submitting your annual income declaration"
-                                    />
-                                    <SuggestionCard
-                                        title="VAT & Employer"
-                                        description="Rules regarding VAT returns and employer contributions"
-                                    />
+                                    {quickMessages.map((msg, index) => (
+                                        <SuggestionCard
+                                            key={index}
+                                            title={msg.title}
+                                            description={msg.description}
+                                            onClick={() => handleSuggestionClick(msg.fullMessage)}
+                                        />
+                                    ))}
                                 </div>
                             </div>
                         )}

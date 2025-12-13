@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
+import { motion } from 'framer-motion';
 import {
     Plus,
     History,
@@ -257,7 +258,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     <NavItem
                         icon={History}
                         label="History"
-                        onClick={() => openComingSoon('History View')}
+                        onClick={() => {
+                            window.location.href = '/history';
+                        }}
                     />
                 </div>
 
