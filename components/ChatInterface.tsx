@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { Sidebar } from '@/components/Sidebar';
 import { Orb } from '@/components/Orb';
 import { SuggestionCard } from '@/components/SuggestionCard';
+import { WelcomeScreen } from '@/components/WelcomeScreen';
 import {
     ChevronDown,
     MoreHorizontal,
@@ -20,13 +21,46 @@ import {
 import { ChatMessage, ModelStatus } from '@/types';
 import ReactMarkdown from 'react-markdown';
 import { AnimatePresence, motion, LayoutGroup } from 'framer-motion';
+import { useUser } from '@/hooks/useUser';
+import { useChatSessions } from '@/hooks/useChatSessions';
 
 export default function ChatInterface() {
     const [input, setInput] = useState('');
-    const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [status, setStatus] = useState<ModelStatus>(ModelStatus.IDLE);
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
     const messagesEndRef = useRef<HTMLDivElement>(null);
+    const isUpdatingFromLocalRef = useRef(false); // Флаг для предотвращения sync-циклов
+
+    // Хуки для пользователя и сессий
+    const { user, isLoading: isUserLoading, setUser } = useUser();
+    const {
+        sessions,
+        activeSession,
+        activeSessionId,
+        isLoading: isSessionsLoading,
+        createSession,
+        updateSession,
+        deleteSession,
+        setActiveSession,
+        groupedSessions
+    } = useChatSessions();
+
+    // Локальные сообщения (синхронизируются с активной сессией)
+    const [messages, setMessages] = useState<ChatMessage[]>([]);
+
+    // Синхронизация сообщений при смене активной сессии
+    useEffect(() => {
+        // Не синхронизируем, если обновление идёт локально (при отправке сообщения)
+        if (isUpdatingFromLocalRef.current) {
+            isUpdatingFromLocalRef.current = false;
+            return;
+        }
+        if (activeSession) {
+            setMessages(activeSession.messages);
+        } else {
+            setMessages([]);
+        }
+    }, [activeSession]);
 
     const scrollToBottom = () => {
         if (messagesEndRef.current?.parentElement) {
@@ -58,8 +92,32 @@ export default function ChatInterface() {
         return () => window.removeEventListener('resize', handleResize);
     }, []);
 
+    // Создание нового чата
+    const handleNewChat = useCallback(() => {
+        createSession();
+        setMessages([]);
+    }, [createSession]);
+
+    // Выбор сессии
+    const handleSelectSession = useCallback((sessionId: string) => {
+        setActiveSession(sessionId);
+    }, [setActiveSession]);
+
+    // Удаление сессии
+    const handleDeleteSession = useCallback((sessionId: string) => {
+        deleteSession(sessionId);
+    }, [deleteSession]);
+
     const handleSendMessage = useCallback(async () => {
         if (!input.trim() || status !== ModelStatus.IDLE) return;
+
+        // Если нет активной сессии, создаём новую
+        let currentSessionId = activeSessionId;
+        if (!currentSessionId) {
+            isUpdatingFromLocalRef.current = true; // Предотвращаем sync при создании сессии
+            const newSession = createSession();
+            currentSessionId = newSession.id;
+        }
 
         const userMsg: ChatMessage = {
             id: Date.now().toString(),
@@ -68,24 +126,30 @@ export default function ChatInterface() {
             timestamp: Date.now()
         };
 
-        setMessages(prev => [...prev, userMsg]);
+        const newMessages = [...messages, userMsg];
+        setMessages(newMessages);
         setInput('');
+
+        // Сохраняем сообщение в сессию
+        isUpdatingFromLocalRef.current = true; // Предотвращаем sync при обновлении
+        updateSession(currentSessionId, newMessages);
 
         // Show thinking status while waiting for response
         setStatus(ModelStatus.THINKING);
 
         const modelMsgId = (Date.now() + 1).toString();
         // Placeholder for model response
-        setMessages(prev => [...prev, {
+        const messagesWithPlaceholder = [...newMessages, {
             id: modelMsgId,
-            role: 'model',
+            role: 'model' as const,
             text: '',
             timestamp: Date.now()
-        }]);
+        }];
+        setMessages(messagesWithPlaceholder);
 
         try {
             // Prepare messages history for API (include all previous messages + new user message)
-            const allMessages = [...messages, userMsg].map(m => ({
+            const allMessages = newMessages.map(m => ({
                 role: m.role === 'model' ? 'assistant' : m.role,
                 content: m.text,
             }));
@@ -142,18 +206,35 @@ export default function ChatInterface() {
                 }
             }
 
+            // Сохраняем финальные сообщения в сессию
+            setMessages(prev => {
+                const finalMessages = prev.map(msg =>
+                    msg.id === modelMsgId
+                        ? { ...msg, text: accumulatedText }
+                        : msg
+                );
+                isUpdatingFromLocalRef.current = true;
+                updateSession(currentSessionId!, finalMessages);
+                return finalMessages;
+            });
+
             setStatus(ModelStatus.IDLE);
         } catch (error) {
             console.error(error);
             setStatus(ModelStatus.ERROR);
-            setMessages(prev => prev.map(msg =>
-                msg.id === modelMsgId
-                    ? { ...msg, text: "I'm sorry, I encountered an error. Please check your connection or API key." }
-                    : msg
-            ));
+            setMessages(prev => {
+                const errorMessages = prev.map(msg =>
+                    msg.id === modelMsgId
+                        ? { ...msg, text: "I'm sorry, I encountered an error. Please check your connection or API key." }
+                        : msg
+                );
+                isUpdatingFromLocalRef.current = true;
+                updateSession(currentSessionId!, errorMessages);
+                return errorMessages;
+            });
             setStatus(ModelStatus.IDLE);
         }
-    }, [input, status]);
+    }, [input, status, messages, activeSessionId, createSession, updateSession]);
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
         if (e.key === 'Enter' && !e.shiftKey) {
@@ -162,13 +243,49 @@ export default function ChatInterface() {
         }
     };
 
-    const isChatEmpty = messages.length === 0;
+    // Welcome screen handler
+    const handleWelcomeComplete = (name: string) => {
+        setUser(name);
+    };
+
+    // Loading state
+    if (isUserLoading || isSessionsLoading) {
+        return (
+            <div className="flex h-[100dvh] w-full bg-[#050505] items-center justify-center">
+                <div className="w-10 h-10 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+            </div>
+        );
+    }
+
+    // Welcome screen for new users
+    if (!user) {
+        return <WelcomeScreen onComplete={handleWelcomeComplete} />;
+    }
+
+    // Prevent showing empty state during sync (fixes Orb animation on reload)
+    const isSyncing = activeSession && activeSession.messages.length > 0 && messages.length === 0;
+    const isChatEmpty = messages.length === 0 && !isSyncing;
+
+    // Получение приветствия на основе времени суток
+    const getGreeting = () => {
+        const hour = new Date().getHours();
+        if (hour < 12) return 'Good Morning';
+        if (hour < 18) return 'Good Afternoon';
+        return 'Good Evening';
+    };
 
     return (
         <div className="flex h-[100dvh] w-full bg-[#050505] overflow-hidden font-sans selection:bg-white/20">
             <Sidebar
                 isOpen={isSidebarOpen}
                 onCloseMobile={() => setIsSidebarOpen(false)}
+                sessions={sessions}
+                activeSessionId={activeSessionId}
+                groupedSessions={groupedSessions}
+                onNewChat={handleNewChat}
+                onSelectSession={handleSelectSession}
+                onDeleteSession={handleDeleteSession}
+                userName={user.name}
             />
 
             {/* Main Content */}
@@ -220,17 +337,21 @@ export default function ChatInterface() {
                                             {msg.role === 'model' && !msg.text && status === ModelStatus.SEARCHING ? (
                                                 // Show searching indicator when waiting for response
                                                 <div className="flex items-center gap-2 text-zinc-400 text-sm py-2">
-                                                    <Search size={16} className="animate-pulse" />
+                                                    <Search size={14} className="animate-pulse" />
                                                     <span>Searching the web</span>
-                                                    <span className="text-zinc-500 font-medium">...</span>
+                                                    <div className="flex gap-1 ml-1">
+                                                        <div className="w-1 h-1 bg-zinc-500 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+                                                        <div className="w-1 h-1 bg-zinc-500 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+                                                        <div className="w-1 h-1 bg-zinc-500 rounded-full animate-bounce"></div>
+                                                    </div>
                                                 </div>
-                                            ) : msg.role === 'model' && !msg.text && status === ModelStatus.STREAMING ? (
-                                                // Show typing indicator when streaming but no text yet
+                                            ) : msg.role === 'model' && !msg.text && (status === ModelStatus.THINKING || status === ModelStatus.STREAMING) ? (
+                                                // Show typing indicator when thinking or streaming but no text yet
                                                 <div className="flex items-center gap-2 text-zinc-400 text-sm py-2">
                                                     <div className="flex gap-1">
-                                                        <div className="w-1.5 h-1.5 bg-zinc-500 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
-                                                        <div className="w-1.5 h-1.5 bg-zinc-500 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
-                                                        <div className="w-1.5 h-1.5 bg-zinc-500 rounded-full animate-bounce"></div>
+                                                        <div className="w-1 h-1 bg-zinc-500 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+                                                        <div className="w-1 h-1 bg-zinc-500 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+                                                        <div className="w-1 h-1 bg-zinc-500 rounded-full animate-bounce"></div>
                                                     </div>
                                                 </div>
                                             ) : (
@@ -274,7 +395,7 @@ export default function ChatInterface() {
                                     <Orb className="w-[100px] h-[100px] md:w-[140px] md:h-[140px]" layoutId="bot-avatar" />
                                 </div>
                                 <h1 className="text-2xl md:text-4xl font-medium text-zinc-100 mb-2 md:mb-3 tracking-tight">
-                                    Good Evening, Kristoffer.
+                                    {getGreeting()}, {user.name}.
                                 </h1>
                                 <h2 className="text-base md:text-3xl font-medium text-zinc-400 tracking-tight">
                                     How can I assist with your taxes today?

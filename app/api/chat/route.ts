@@ -16,7 +16,7 @@ const getSystemPrompt = () => {
 
 **CRITICAL:** Your training data has a knowledge cutoff. For ANY information that may have changed since your training (tax rates, deadlines, regulations, current events, dates, etc.), you MUST use web search to verify and get current information.
 
-**IMPORTANT: You MUST always respond in English, regardless of the language the user writes in.**
+**IMPORTANT: You MUST always respond in the same language the user writes in. If the user writes in Swedish, respond in Swedish. If they write in English, respond in English. Mirror the user's language choice.**
 
 ---
 

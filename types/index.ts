@@ -23,3 +23,19 @@ export enum ModelStatus {
     STREAMING = 'STREAMING',
     ERROR = 'ERROR'
 }
+
+// Пользователь (хранится в localStorage)
+export interface User {
+    id: string;
+    name: string;
+    createdAt: number;
+}
+
+// Сессия чата
+export interface ChatSession {
+    id: string;
+    title: string;           // Автоматически из первого сообщения
+    messages: ChatMessage[];
+    createdAt: number;
+    updatedAt: number;
+}
