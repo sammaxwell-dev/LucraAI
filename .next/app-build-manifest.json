@@ -16,10 +16,10 @@
       "static/chunks/main-app.js",
       "static/chunks/app/api/chat/route.js"
     ],
-    "/api/generate-title/route": [
+    "/documents/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/api/generate-title/route.js"
+      "static/chunks/app/documents/page.js"
     ],
     "/history/page": [
       "static/chunks/webpack.js",

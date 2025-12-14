@@ -1,4 +1,4 @@
-// File: /Users/dwhitewolf/Work/MVP/LucraAI/app/api/chat/route.ts
+// File: B:\Work\MVP\LucraAI\app\api\chat\route.ts
 import * as entry from '../../../../../app/api/chat/route.js'
 import type { NextRequest } from 'next/server.js'
 

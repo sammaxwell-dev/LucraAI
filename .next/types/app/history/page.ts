@@ -1,4 +1,4 @@
-// File: /Users/dwhitewolf/Work/MVP/LucraAI/app/history/page.tsx
+// File: B:\Work\MVP\LucraAI\app\history\page.tsx
 import * as entry from '../../../../app/history/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 

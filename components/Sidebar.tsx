@@ -10,7 +10,8 @@ import {
     MoreHorizontal,
     Triangle,
     X,
-    Trash2
+    Trash2,
+    FileText
 } from 'lucide-react';
 import { ComingSoonModal } from './ComingSoonModal';
 import { ChatSession } from '@/types';
@@ -260,6 +261,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
                         label="History"
                         onClick={() => {
                             window.location.href = '/history';
+                        }}
+                    />
+                    <NavItem
+                        icon={FileText}
+                        label="Documents"
+                        onClick={() => {
+                            window.location.href = '/documents';
                         }}
                     />
                 </div>
