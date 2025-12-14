@@ -13,13 +13,18 @@
     "@ai-sdk/openai": "^2.0.80",
     "@ai-sdk/react": "^2.0.112",
     "@google/genai": "^1.33.0",
+    "@radix-ui/react-slot": "^1.2.4",
     "ai": "^5.0.110",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
     "framer-motion": "^12.23.26",
     "lucide-react": "^0.560.0",
+    "mammoth": "^1.11.0",
     "next": "^15.1.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-markdown": "^10.1.0",
+    "tailwind-merge": "^3.4.0",
     "zod": "^4.1.13"
   },
   "devDependencies": {

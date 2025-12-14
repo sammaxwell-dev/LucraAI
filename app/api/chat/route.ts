@@ -1,4 +1,4 @@
-import { streamText } from 'ai';
+import { streamText, convertToModelMessages, type UIMessage } from 'ai';
 import { openai } from '@ai-sdk/openai';
 
 const getSystemPrompt = () => {
@@ -23,6 +23,16 @@ const getSystemPrompt = () => {
 
 **CRITICAL:** Your training data has a knowledge cutoff. For ANY information that may have changed since your training (tax rates, deadlines, regulations, current events, dates, etc.), you MUST use web search to verify and get current information.
 
+**DOCUMENT ANALYSIS:**
+When the user attaches or asks about documents:
+1. **CHECK RELEVANCE FIRST** - Is this a financial/accounting/tax document (invoice, receipt, tax form, bank statement, financial report)? 
+   - **If NO** (PRD, technical specs, business plans, project documents, etc.): **REFUSE to analyze.** Say something like: "This looks like [document type] — interesting, but not my department! I'm an accountant, not a project manager. Got any invoices, receipts, or tax forms?"
+   - **If YES**: Proceed with analysis.
+2. **For financial documents ONLY:** Analyze thoroughly - Extract amounts, dates, VAT, company names
+3. **Never** summarize or explain non-financial document content in detail
+4. **Never** list features, requirements, or technical details from non-financial documents
+
+**STRICT RULE:** You are a Swedish accountant named Lucra. You ONLY analyze financial documents. If someone uploads a PRD, project plan, or any non-financial document, give a witty 1-sentence rejection and pivot to accounting topics. Do NOT summarize their content.
 
 **INSTRUCTIONS:**
 1. **Language:** ALWAYS respond in the user's language. If you search info on web and user spoke to you in English, still respond in English. If user spoke to you in Swedish, respond in Swedish. Don't mix languages without user's permission or desire.
@@ -30,9 +40,9 @@ const getSystemPrompt = () => {
 3. **Truthfulness:** Prioritize substance over fluff. Use **web search** for any dates, rates, or regulations that might have changed.
 4. **Scope & Off-Topic:**
    - **On-Topic:** You are the master of Swedish accounting.
-   - **Off-Topic:** Do NOT give a robotic refusal. Answer briefly, wittily, or philosophically, then bridge back to finance.
+   - **Off-Topic:** Do NOT give a robotic refusal. Give a **SHORT** witty reply (max 1-2 sentences), then quickly pivot back to finance. Keep it punchy — no long tangents.
      - *User:* "What's the meaning of life?"
-     - *Lucra:* "42. But if you're looking for meaning in your BAS-kontoplan, looking at account 2081 is a good start. Need help with equity?"
+     - *Lucra:* "42. Speaking of numbers — need help with yours?"
 
 
 
@@ -62,27 +72,20 @@ You have access to a web search tool. **USE IT** when:
 
 };
 
+// Allow streaming responses up to 60 seconds for document processing
+export const maxDuration = 60;
+
 export async function POST(req: Request) {
-    const { prompt, messages } = await req.json();
+    const { messages }: { messages: UIMessage[] } = await req.json();
 
-    // Transform user messages
-    const userMessages = messages
-        ? messages.map((m: { role: string; text?: string; content?: string }) => ({
-            role: m.role as 'user' | 'assistant' | 'system',
-            content: m.text || m.content || '',
-        }))
-        : [{ role: 'user' as const, content: prompt }];
+    // Convert UI messages to model messages (handles file parts automatically)
+    const modelMessages = convertToModelMessages(messages);
 
-    // Add system prompt at the beginning
-    const inputMessages = [
-        { role: 'system' as const, content: getSystemPrompt() },
-        ...userMessages,
-    ];
-
-    // Use OpenAI Responses API with web search tool
+    // Use GPT-4o for document analysis
     const result = streamText({
-        model: openai.responses('gpt-4o'),
-        messages: inputMessages,
+        model: openai.responses('gpt-5.1'),
+        system: getSystemPrompt(),
+        messages: modelMessages,
         tools: {
             web_search: openai.tools.webSearch({
                 searchContextSize: 'medium',
@@ -91,50 +94,6 @@ export async function POST(req: Request) {
         },
     });
 
-    // Create custom stream that includes status markers
-    const encoder = new TextEncoder();
-    let hasStartedStreaming = false;
-    let isSearching = false;
-
-    const customStream = new ReadableStream({
-        async start(controller) {
-            try {
-                for await (const part of result.fullStream) {
-                    if (part.type === 'tool-call' && part.toolName === 'web_search') {
-                        // Send searching marker
-                        if (!isSearching) {
-                            isSearching = true;
-                            controller.enqueue(encoder.encode('[STATUS:SEARCHING]\n'));
-                        }
-                    } else if (part.type === 'tool-result') {
-                        // Search completed, text will start soon
-                        if (isSearching) {
-                            controller.enqueue(encoder.encode('[STATUS:STREAMING]\n'));
-                            isSearching = false;
-                        }
-                    } else if (part.type === 'text-delta') {
-                        // Send streaming marker on first text
-                        if (!hasStartedStreaming) {
-                            hasStartedStreaming = true;
-                            if (!isSearching) {
-                                controller.enqueue(encoder.encode('[STATUS:STREAMING]\n'));
-                            }
-                        }
-                        // Send actual text
-                        controller.enqueue(encoder.encode(part.text));
-                    }
-                }
-                controller.close();
-            } catch (error) {
-                controller.error(error);
-            }
-        },
-    });
-
-    return new Response(customStream, {
-        headers: {
-            'Content-Type': 'text/plain; charset=utf-8',
-            'Transfer-Encoding': 'chunked',
-        },
-    });
+    // Return plain text stream (easier to parse on client)
+    return result.toTextStreamResponse();
 }

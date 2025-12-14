@@ -48,3 +48,14 @@ export interface ChatSession {
     isGeneratingTitle?: boolean;  // Идет ли генерация названия
     titleGenerated?: boolean;      // Было ли сгенерировано AI название
 }
+
+// Загруженный документ
+export interface UserDocument {
+    id: string;
+    name: string;
+    type: string;
+    size: number;
+    uploadedAt: number;
+    dataUrl?: string; // Base64 для превью (маленькие файлы/изображения)
+    extractedText?: string; // Извлечённый текст из документа для AI
+}

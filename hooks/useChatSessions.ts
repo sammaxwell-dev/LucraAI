@@ -58,7 +58,7 @@ export function useChatSessions() {
         }
     }, [activeSessionId, isLoading]);
 
-    // Создание новой сессии
+    // Создание новой сессии (НЕ сохраняет в историю - сессия сохранится только при первом сообщении)
     const createSession = useCallback((): ChatSession => {
         const newSession: ChatSession = {
             id: crypto.randomUUID(),
@@ -68,37 +68,67 @@ export function useChatSessions() {
             updatedAt: Date.now(),
         };
 
-        setSessions(prev => [newSession, ...prev]);
+        // Только устанавливаем активную сессию, но НЕ добавляем в массив
+        // Сессия добавится через updateSession при первом сообщении
         setActiveSessionId(newSession.id);
 
         return newSession;
     }, []);
 
+    // Добавление новой сессии в массив (вызывается при первом сообщении)
+    const addSession = useCallback((session: ChatSession) => {
+        setSessions(prev => {
+            // Проверяем, нет ли уже такой сессии
+            if (prev.some(s => s.id === session.id)) {
+                return prev;
+            }
+            return [session, ...prev];
+        });
+    }, []);
+
     // Обновление сессии (добавление сообщений)
+    // Если сессия не существует в массиве, она будет добавлена автоматически
     const updateSession = useCallback((sessionId: string, messages: ChatMessage[]) => {
-        setSessions(prev => prev.map(session => {
-            if (session.id === sessionId) {
-                // Генерируем название из первого сообщения пользователя
-                let title = session.title;
-                if (title === 'New Chat' && messages.length > 0) {
-                    const firstUserMessage = messages.find(m => m.role === 'user');
-                    if (firstUserMessage) {
-                        title = firstUserMessage.text.slice(0, 50);
-                        if (firstUserMessage.text.length > 50) {
-                            title += '...';
-                        }
+        setSessions(prev => {
+            const existingSession = prev.find(s => s.id === sessionId);
+
+            // Генерируем название из первого сообщения пользователя
+            let title = 'New Chat';
+            if (messages.length > 0) {
+                const firstUserMessage = messages.find(m => m.role === 'user');
+                if (firstUserMessage) {
+                    title = firstUserMessage.text.slice(0, 50);
+                    if (firstUserMessage.text.length > 50) {
+                        title += '...';
                     }
                 }
+            }
 
-                return {
-                    ...session,
+            if (!existingSession) {
+                // Сессия не существует - создаём новую и добавляем в начало
+                const newSession: ChatSession = {
+                    id: sessionId,
                     title,
                     messages,
+                    createdAt: Date.now(),
                     updatedAt: Date.now(),
                 };
+                return [newSession, ...prev];
             }
-            return session;
-        }));
+
+            // Обновляем существующую сессию
+            return prev.map(session => {
+                if (session.id === sessionId) {
+                    return {
+                        ...session,
+                        title: session.title === 'New Chat' ? title : session.title,
+                        messages,
+                        updatedAt: Date.now(),
+                    };
+                }
+                return session;
+            });
+        });
     }, []);
 
     // Удаление сессии
@@ -176,6 +206,7 @@ export function useChatSessions() {
         activeSessionId,
         isLoading,
         createSession,
+        addSession,
         updateSession,
         deleteSession,
         setActiveSession,

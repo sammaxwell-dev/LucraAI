@@ -27,9 +27,10 @@ interface SidebarProps {
     onSelectSession: (id: string) => void;
     onDeleteSession: (id: string) => void;
     userName: string;
+    documentCount?: number;
 }
 
-const NavItem = ({ icon: Icon, label, active = false, onClick }: { icon: React.ElementType, label: string, active?: boolean, onClick?: () => void }) => (
+const NavItem = ({ icon: Icon, label, active = false, badge, onClick }: { icon: React.ElementType, label: string, active?: boolean, badge?: number, onClick?: () => void }) => (
     <div
         onClick={onClick}
         className={`
@@ -38,6 +39,11 @@ const NavItem = ({ icon: Icon, label, active = false, onClick }: { icon: React.E
     `}>
         <Icon size={18} strokeWidth={2} className={active ? 'text-white' : 'text-zinc-500 group-hover:text-zinc-300'} />
         <span className="text-sm font-medium whitespace-nowrap opacity-100 transition-opacity duration-200">{label}</span>
+        {badge !== undefined && badge > 0 && (
+            <span className="ml-auto px-1.5 py-0.5 text-xs font-medium bg-white/10 text-zinc-400 rounded">
+                {badge}
+            </span>
+        )}
     </div>
 );
 
@@ -158,7 +164,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
     onNewChat,
     onSelectSession,
     onDeleteSession,
-    userName
+    userName,
+    documentCount = 0
 }) => {
     const [isMobile, setIsMobile] = useState(false);
     const [isComingSoonOpen, setIsComingSoonOpen] = useState(false);
@@ -266,6 +273,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     <NavItem
                         icon={FileText}
                         label="Documents"
+                        badge={documentCount}
                         onClick={() => {
                             window.location.href = '/documents';
                         }}

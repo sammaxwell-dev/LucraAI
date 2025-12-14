@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useChatSessions } from '@/hooks/useChatSessions';
+import { useChatSessionsContext } from '@/components/ChatSessionsContext';
 import { useUser } from '@/hooks/useUser';
 import {
     ArrowLeft,
@@ -23,7 +23,7 @@ export default function HistoryPage() {
         isLoading: isSessionsLoading,
         setActiveSession,
         deleteSession
-    } = useChatSessions();
+    } = useChatSessionsContext();
     const [searchQuery, setSearchQuery] = useState('');
 
     useEffect(() => {
@@ -81,7 +81,7 @@ export default function HistoryPage() {
     };
 
     return (
-        <div className="min-h-screen bg-[#050505] text-white">
+        <div className="h-full overflow-y-auto bg-[#050505] text-white">
             {/* Background Effects */}
             <div className="fixed top-[-20%] left-[30%] w-[600px] h-[600px] bg-blue-900/10 rounded-full blur-[120px] pointer-events-none" />
             <div className="fixed bottom-[-10%] right-[20%] w-[500px] h-[500px] bg-purple-900/5 rounded-full blur-[100px] pointer-events-none" />

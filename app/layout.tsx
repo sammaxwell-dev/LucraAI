@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Geist } from 'next/font/google'
 import './globals.css'
+import { AppShell } from '@/components/AppShell';
 
 const geist = Geist({
     subsets: ['latin'],
@@ -20,7 +21,9 @@ export default function RootLayout({
     return (
         <html lang="en" className="dark" suppressHydrationWarning>
             <body className={`${geist.variable} font-sans antialiased`}>
-                {children}
+                <AppShell>
+                    {children}
+                </AppShell>
             </body>
         </html>
     )
