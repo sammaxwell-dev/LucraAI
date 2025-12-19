@@ -18,7 +18,7 @@ export const Logo: React.FC<{ size?: 'sm' | 'md' | 'lg' }> = ({ size = 'md' }) =
 
             {/* Logo text */}
             <span className="logo-text">
-                <span className="logo-lucra">Lucra</span>
+                <span className="logo-lucra">Saldo</span>
                 <span className="logo-ai">AI</span>
             </span>
         </div>

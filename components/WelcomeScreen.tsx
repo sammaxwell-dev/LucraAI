@@ -68,7 +68,7 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onComplete }) => {
 
 
                     <h1 className="text-3xl md:text-5xl font-bold text-white mb-3 tracking-tight">
-                        Welcome to <span className="bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">Lucra AI</span>
+                        Welcome to <span className="bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">Saldo AI</span>
                     </h1>
 
                     <p className="text-zinc-400 text-base md:text-lg mb-8 max-w-md">

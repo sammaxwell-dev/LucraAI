@@ -77,7 +77,7 @@ export const ComingSoonModal = ({ isOpen, onClose, featureName = "This feature" 
 
                     {/* Subtle footer text or brand */}
                     <div className="mt-8 pt-6 border-t border-white/5">
-                        <span className="text-[10px] uppercase tracking-widest text-zinc-600 font-medium">Lucra AI</span>
+                        <span className="text-[10px] uppercase tracking-widest text-zinc-600 font-medium">Saldo AI</span>
                     </div>
                 </div>
             </div>

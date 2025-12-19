@@ -11,7 +11,10 @@ import {
     Triangle,
     X,
     Trash2,
-    FileText
+    FileText,
+    Calculator,
+    Calendar,
+    FileBarChart
 } from 'lucide-react';
 import { ComingSoonModal } from './ComingSoonModal';
 import { ChatSession } from '@/types';
@@ -229,7 +232,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                         <div className="w-6 h-6 bg-white rounded-md flex items-center justify-center text-black">
                             <Triangle size={14} fill="black" className="rotate-180" />
                         </div>
-                        <span className="text-xl font-bold tracking-tight whitespace-nowrap">Lucra AI</span>
+                        <span className="text-xl font-bold tracking-tight whitespace-nowrap">Saldo AI</span>
                     </div>
                     {isMobile && (
                         <button onClick={onCloseMobile} className="p-1 text-zinc-400 hover:text-white">
@@ -276,6 +279,27 @@ export const Sidebar: React.FC<SidebarProps> = ({
                         badge={documentCount}
                         onClick={() => {
                             window.location.href = '/documents';
+                        }}
+                    />
+                    <NavItem
+                        icon={Calculator}
+                        label="Calculator"
+                        onClick={() => {
+                            window.location.href = '/calculator';
+                        }}
+                    />
+                    <NavItem
+                        icon={Calendar}
+                        label="Deadlines"
+                        onClick={() => {
+                            window.location.href = '/deadlines';
+                        }}
+                    />
+                    <NavItem
+                        icon={FileBarChart}
+                        label="Reports"
+                        onClick={() => {
+                            window.location.href = '/reports';
                         }}
                     />
                 </div>

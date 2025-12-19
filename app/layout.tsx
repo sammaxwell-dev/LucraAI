@@ -9,7 +9,7 @@ const geist = Geist({
 })
 
 export const metadata: Metadata = {
-    title: 'Lucra AI',
+    title: 'Saldo AI',
     description: 'AI-powered tax assistant',
 }
 
