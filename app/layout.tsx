@@ -1,27 +1,30 @@
-import type { Metadata } from 'next'
-import { Geist } from 'next/font/google'
-import './globals.css'
+import type { Metadata } from "next";
+import { Geist } from "next/font/google";
+import "./globals.css";
 
 const geist = Geist({
-    subsets: ['latin'],
-    variable: '--font-geist',
-})
+  subsets: ["latin"],
+  variable: "--font-geist",
+});
 
 export const metadata: Metadata = {
-    title: 'Lucra AI',
-    description: 'AI-powered tax assistant',
-}
+  title: "Lucra AI",
+  description: "AI-powered tax assistant",
+};
 
 export default function RootLayout({
-    children,
+  children,
 }: {
-    children: React.ReactNode
+  children: React.ReactNode;
 }) {
-    return (
-        <html lang="en" className="dark" suppressHydrationWarning>
-            <body className={`${geist.variable} font-sans antialiased`}>
-                {children}
-            </body>
-        </html>
-    )
+  return (
+    <html lang="en" className="dark" suppressHydrationWarning>
+      <body
+        className={`${geist.variable} font-sans antialiased`}
+        suppressHydrationWarning
+      >
+        {children}
+      </body>
+    </html>
+  );
 }
