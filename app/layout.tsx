@@ -8,7 +8,7 @@ const geist = Geist({
 });
 
 export const metadata: Metadata = {
-  title: "Lucra AI",
+  title: "Dark Lucra",
   description: "AI-powered tax assistant",
 };
 
